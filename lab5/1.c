@@ -1,65 +1,61 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-struct Flight {
-    char destination[10];
-    int number;
-    char type[10];};
+//Функция для переворота строки
+void reverse_string(char *str) {
+    int length = strlen(str); //длина строки
+    // Меняем симметричные символы местами
+    for (int i = 0; i < length / 2; i++) { //проходит до середины строки
+        char temp = str[i]; //сохраняет текущий символ во временной переменной
+        str[i] = str[length - i - 1]; //заменяет текущий символ симметричным из конца строки
+        str[length - i - 1] = temp; //заменяет симметричный символ сохранённым
+    }
+}
 
-int main() {
-    int n,choice,searchNumber,found=0;
-    struct Flight flight;
-    char searchValue[10];
-    FILE* file=fopen("Spravka.dat","wb");
-    if (file==NULL) {
-        printf("Ошибка при открытии файла для записи.\n");
-        return 1;}
-
-    printf("Введите количество записей: ");
-    scanf("%d",&n);
-
-    for (int i=0;i<n;i++) {
-        printf("Данные для рейса №%d:\n", i + 1);
-        printf("Пункт назначения: ");
-        scanf("%s", flight.destination);
-        printf("Номер рейса: ");
-        scanf("%d", &flight.number);
-        printf("Тип самолета: ");
-        scanf("%s", flight.type);
-        fwrite(&flight,sizeof(struct Flight),1,file);
+int main(int argc, char *argv[]) {
+     //Проверка аргументов командной строки 
+     if (argc != 2) {
+        fprintf(stderr, "Фигня все %s файл\n", argv[0]);
+        return 1;
     }
 
+    //Открываем файл для чтения
+    FILE *file = fopen("2.txt", "r");
+    if (file == NULL) {
+        perror("Ошибка открытия файла");
+        exit(1);
+    }
+
+    //Создаём выходной файл
+    char output_filename[256];
+    // Безопасное формирование имени выходного файла
+    snprintf(output_filename, sizeof(output_filename), "reversed_%s", argv[1]);
+    FILE *output = fopen(output_filename, "w");
+    if (output == NULL) {
+        perror("Ошибка создания файла");
+        fclose(file);
+        return 1;
+    }
+    //Чтение и обработка
+    char line[256]; // Буфер для хранения одной строки
+    while (fgets(line, sizeof(line), file)) {
+        //Разбиваем строку на слова
+        char *word = strtok(line, " \t\n"); // Первое слово
+        while (word != NULL) {
+            //Переворачиваем слово
+            reverse_string(word);
+            //Записываем слово в выходной файл 
+            fprintf(output, "%s ", word);
+            //Переходим к следующему слову
+            word = strtok(NULL, " \t\n");
+        }
+        //Добавляем перенос строки после обработки всех слов
+        fprintf(output, "\n");
+    }
+    //ЗАКРЫТИЕ ФАЙЛОВ
     fclose(file);
+    fclose(output);
 
-    printf("Выберите поле для поиска:\n");
-    printf("1)Пункт назначения\n");
-    printf("2)Номер рейса\n");
-    printf("3)Тип самолета\n");
-    scanf("%d",&choice);
-
-
-    printf("Введите значение для поиска: ");
-    if (choice==1 || choice==3) {
-        scanf("%s", searchValue);
-    } else if (choice==2) {
-        scanf("%d", &searchNumber);
-    } else {printf("Неккоретное значение аргумента"); return 1;}
-
-    file = fopen("Spravka.dat", "rb");
-    if (file==NULL) {
-        printf("Ошибка при открытии файла для чтения.\n");
-        return 1;}
-
-    while (fread(&flight,sizeof(struct Flight),1,file)) {
-        if ((choice==1 && strcmp(flight.destination,searchValue)==0) || (choice==2 && flight.number==searchNumber) || (choice==3 && strcmp(flight.type,searchValue)==0)) {
-            found = 1;
-            printf("Данные найдены:\n");
-            printf("Пункт назначения: %s\n",flight.destination);
-            printf("Номер рейса: %d\n", flight.number);
-            printf("Тип самолета: %s\n", flight.type);}}
-
-    if (!found) {
-        printf("Записи с таким значением не найдены.\n");}
-
-    fclose(file);
+    printf("Файл обработан. Результат сохранён в %s\n", output_filename);
 }
