@@ -61,6 +61,9 @@
 
 График:
 
+![image](https://github.com/user-attachments/assets/b4902809-8044-4ccd-96a8-3fe70b2a3950)
+
+
 
 
 
